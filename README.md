@@ -1,4 +1,4 @@
-# Net::Rtmp
+# Net::RTMP
 
 TODO: Write a gem description
 
@@ -34,16 +34,21 @@ Helper methods exist to determine the state of the connection.
     client.closed?       # => true/false
 
 Sending data is done through the `write` method, which expects a
-`Net::RTMP::Packet`.
+`Net::RTMP::Envelope` (representing the request and a block.  When the server
+responds to the request, the block block is executed with another
+`Net::RTMP::Envelope` object, representing the response.
 
     packet = MyCustomPacket.new( ... )
-    client.write(packet)
+    header = Net::RTMP::Envelope::Header.new( ... )
 
-Receiving data is done through the `read` method, which returns a
-`Net::RTMP::Packet`.
+    envelope = Net::RTMP::Envelope.new
+    envelope.headers << header
+    envelope.messages << packet
 
-    packet_id = 1
-    packet = client.read(packet_id)
+    client.write(packet) do |response|
+      puts response.class       # => Net::RTMP::Envelope
+      puts response.messages    # => [<Net::RTMP::Message>, <Net::RTMP::Message>, ...]
+    end
 
 ### Packets
 

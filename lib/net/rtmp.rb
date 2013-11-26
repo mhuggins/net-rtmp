@@ -73,7 +73,8 @@ module Net
     end
 
     def chunk_size=(chunk_size)
-      raise ArgumentError, 'invalid chunk size' unless chunk_size.is_a?(Fixnum)
+      raise ArgumentError, 'invalid chunk size' unless chunk_size.is_a?(Fixnum) && chunk_size > 0
+      #logger.warn 'chunk size should be at least 128 bytes' if chunk_size < 128
       @chunk_size = chunk_size
     end
 
@@ -152,10 +153,7 @@ module Net
 
     def read_async
       thread = Thread.new do
-        while connected?
-          read
-          sleep 0.1  # TODO consider making this a dynamic option
-        end
+        read while connected?
       end
 
       thread.abort_on_exception = true
@@ -163,7 +161,7 @@ module Net
     end
 
     def read
-      while (data = socket.read_nonblock(1024) rescue nil)
+      while (data = socket.read_nonblock(chunk_size) rescue nil)
         buffer << data
       end
 
